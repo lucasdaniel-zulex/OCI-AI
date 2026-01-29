@@ -1,0 +1,53 @@
+1️⃣ Crie uma instância Always Free
+Acesse o https://cloud.oracle.com/
+Vá em Compute > Instances > Create Instance
+Escolha o shape: Ampere (Arm64) VM.Standard.A1.Flex
+Defina 2–4 OCPUs e 12–24 GB RAM
+Sistema operacional: Ubuntu 22.04
+Configure rede com acesso público e libere a porta 5678 no security list (porta padrão do n8n)
+
+2️⃣ Acesse a VM via SSH
+
+ssh -i sua-chave.key ubuntu@<IP_PÚBLICO>
+
+3️⃣ Instale Docker e Docker Compose
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install docker.io docker-compose -y
+sudo usermod -aG docker $USER
+newgrp docker
+
+4️⃣ Prepare o ambiente
+
+mkdir ~/n8n && cd ~/n8n
+mkdir n8n_data
+sudo chown -R 1000:1000 ./n8n_data
+
+5️⃣ Crie o arquivo docker-compose.yml
+
+nano docker-compose.yml
+
+Cole o conteúdo abaixo:
+
+version: '3'
+
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_SECURE_COOKIE=false
+      - N8N_BASIC_AUTH_PASSWORD=senha123
+      - WEBHOOK_TUNNEL_URL=http://localhost:5678
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+Dica: 🔐 Altere o login e senha por valores seguros!
+6️⃣ Suba o serviço
+docker-compose up -d
+7️⃣ Acesse via navegador
+http://<IP_PÚBLICO>:5678
